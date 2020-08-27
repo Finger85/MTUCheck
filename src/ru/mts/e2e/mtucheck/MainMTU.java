@@ -2,6 +2,7 @@ package ru.mts.e2e.mtucheck;
 
 import com.jcraft.jsch.Channel;
 import com.jcraft.jsch.JSchException;
+
 import java.io.IOException;
 import java.sql.*;
 import java.util.HashMap;
@@ -9,7 +10,7 @@ import java.util.Map;
 
 public class MainMTU {
     private final static String GET_ENB_BY_MR =
-                    "SELECT " +
+            "SELECT " +
                     "id, " +
                     "ip as enb_ip, " +
                     "enb_id, " +
@@ -27,8 +28,7 @@ public class MainMTU {
     public static void main(String[] args) {
         final long checkingDate = currentTime - currentTime % DAY_IN_MS - HOUR_IN_MS * 3;
 
-            UpdateEnbTable.doUpdate();
-
+        UpdateEnbTable.doUpdate();
 
         Map<Integer, String> mmeIpMap = new HashMap<>();
         try (Connection connection = DBConnection.getConnection(DBType.MYSQL);
@@ -43,8 +43,8 @@ public class MainMTU {
             System.out.println("Failed to establish a connection to the DataBase" + e.getMessage());
         }
 
-        Map<Integer, Map<String,String>> sshSetting = SSHSettings.getSetting();
-        for (Map.Entry<Integer,Map<String,String>> sshSettingEntry : sshSetting.entrySet()) {
+        Map<Integer, Map<String, String>> sshSetting = SSHSettings.getSetting();
+        for (Map.Entry<Integer, Map<String, String>> sshSettingEntry : sshSetting.entrySet()) {
 
             Thread thread = new Thread(() -> {
 
@@ -69,7 +69,7 @@ public class MainMTU {
                 }
 
                 try (Connection connectionMySQLInThread = DBConnection.getConnection(DBType.MYSQL);
-                     PreparedStatement statement = connectionMySQLInThread.prepareStatement(GET_ENB_BY_MR, ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_UPDATABLE)){
+                     PreparedStatement statement = connectionMySQLInThread.prepareStatement(GET_ENB_BY_MR, ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_UPDATABLE)) {
 
                     statement.setInt(1, mr_id);
                     ResultSet resultSet = statement.executeQuery();
@@ -78,11 +78,10 @@ public class MainMTU {
                         long enb_last_check = resultSet.getLong("last_check");
                         EnodebStatus enb_status = EnodebStatus.valueOf(resultSet.getString("status"));
 
-                        if (    (enb_status == EnodebStatus.GOOD && (checkingDate - enb_last_check > DAY_IN_MS * 180)) ||
+                        if ((enb_status == EnodebStatus.GOOD && (checkingDate - enb_last_check > DAY_IN_MS * 180)) ||
                                 (enb_status == EnodebStatus.DOWN && (checkingDate - enb_last_check > DAY_IN_MS)) ||
                                 (enb_status == EnodebStatus.BAD && (checkingDate - enb_last_check > DAY_IN_MS * 6)) ||
-                                (enb_status == EnodebStatus.NEW))
-                        {
+                                (enb_status == EnodebStatus.NEW)) {
                             String enb_ip = resultSet.getString("enb_ip");
                             String enb_id = resultSet.getString("enb_id");
                             int enb_mr_id = resultSet.getInt("mr_id");
@@ -105,7 +104,7 @@ public class MainMTU {
                 } catch (IOException e) {
                     System.out.println("Fail to read output from a console" + e.getMessage());
                 }
-            sshConnection.close();
+                sshConnection.close();
             });
             thread.start();
         }
