@@ -27,9 +27,8 @@ public class MainMTU {
     public static void main(String[] args) {
         final long checkingDate = currentTime - currentTime % DAY_IN_MS - HOUR_IN_MS * 3;
 
-        if (true) {
             UpdateEnbTable.doUpdate();
-        }
+
 
         Map<Integer, String> mmeIpMap = new HashMap<>();
         try (Connection connection = DBConnection.getConnection(DBType.MYSQL);
