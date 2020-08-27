@@ -2,7 +2,6 @@ package ru.mts.e2e.mtucheck;
 
 import com.jcraft.jsch.Channel;
 import com.jcraft.jsch.JSchException;
-
 import java.io.IOException;
 import java.sql.*;
 import java.util.HashMap;
