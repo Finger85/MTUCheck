@@ -6,6 +6,7 @@ public class UpdateEnbTable {
     private static final String INSERT_TO_ENB_TEMP_TABLE = "INSERT INTO enb_temp (ip, enb_id, mr_id, last_check) VALUES (?,?,(SELECT id FROM mr WHERE name = ?),?)";
     private static final String INSERT_ALL_NEW_TO_ENB_TABLE = "INSERT INTO enb (ip, enb_id, mr_id, last_check) VALUES (?,?,?,?)";
     private static final String CREATE_ENB_TEMP_TABLE = "CREATE TEMPORARY TABLE enb_temp LIKE enb";
+    private static final String ENB_ALL_RECORDS_COUNTER = "SELECT count(id) FROM enb";
     private static final String SELECT_ALL_EXIST_ENB =
             "SELECT DISTINCT " +
             "CASE " +
@@ -29,8 +30,8 @@ public class UpdateEnbTable {
         {
             Statement statementSQL = connectionMySQL.createStatement();
             statementSQL.executeUpdate(CREATE_ENB_TEMP_TABLE);
-            System.out.println("Enb temporary table is created.");
-            System.out.println("Adding all existing enb to temporary table in progress...");
+            MainMTU.logger.info("Enb temporary table is created ({})." , DBType.MYSQL.toString());
+            MainMTU.logger.info("Adding all existing eNBs to the temporary table in progress...");
             connectionMySQL.setAutoCommit(false);
             long date = System.currentTimeMillis();
             long start = date;
@@ -53,22 +54,26 @@ public class UpdateEnbTable {
 
                     try {
                         psMySQLInsertToEnbTempTable.executeUpdate();
+                        MainMTU.logger.trace("eNB = {}, {}, {} added to the temporary table. ", MR, GLOBAL_ENODEB_ID, ENODEB_IP_ADDRESS);
                         inserted++;
                       } catch (SQLException e){
-                        connectionMySQL.rollback();
-                        e.printStackTrace();
-                        break;
+                        //connectionMySQL.rollback();
+                        MainMTU.logger.error("eNB = {}, {}, {} failed to add to the temporary table. Error message: {}.", MR, GLOBAL_ENODEB_ID, ENODEB_IP_ADDRESS, e.getMessage());
+                        continue;
                     }
                 }
                 connectionMySQL.commit();
                 finish = System.currentTimeMillis();
-                System.out.println(inserted + " records inserted into enb temporary table." + " Transaction time = " + (finish-start) + " ms. ");
+                MainMTU.logger.info("{} records inserted into enb temporary table. Transaction time = {}ms.", inserted, (finish-start));
                 start = finish;
                 inserted = 0;
             }
 
             try (ResultSet rsNotExitssEnb = statementSQL.executeQuery(SELECT_NOT_EXISTS_ENB);
                  PreparedStatement psInsertNewToEnbTable = connectionMySQL.prepareStatement(INSERT_ALL_NEW_TO_ENB_TABLE)) {
+
+                MainMTU.logger.trace("Adding all NEW eNBs to the \"enb\" table in progress...");
+
                 while (rsNotExitssEnb.next()) {
 
                     int MR = rsNotExitssEnb.getInt("mr_id");
@@ -82,21 +87,28 @@ public class UpdateEnbTable {
 
                     try {
                         psInsertNewToEnbTable.executeUpdate();
+                        MainMTU.logger.trace("eNB = {}, {}, {} added to the MAIN enb table. ", MR, GLOBAL_ENODEB_ID, ENODEB_IP_ADDRESS);
                         inserted++;
                     } catch (SQLException e){
-                        connectionMySQL.rollback();
-                        e.printStackTrace();
-                        break;
+                        //connectionMySQL.rollback();
+                        MainMTU.logger.error("eNB = {}, {}, {} failed to add to the MAIN table. Error message: {}.", MR, GLOBAL_ENODEB_ID, ENODEB_IP_ADDRESS, e.getMessage());
+                        continue;
                     }
                 }
                 connectionMySQL.commit();
                 finish = System.currentTimeMillis();
-                System.out.println(inserted + " new records inserted into enb table." + " Transaction time = " + (finish-start) + " ms. ");
+                MainMTU.logger.info("{} records inserted into enb MAIN table. Transaction time = {}ms.", inserted, (finish-start));
             }
+            try (ResultSet allENBCounter = statementSQL.executeQuery(ENB_ALL_RECORDS_COUNTER))
+                  {
+                      if (allENBCounter.next()) {
+                          int eNBCounter = allENBCounter.getInt(1);
+                          MainMTU.logger.info("ENB MAIN table has {} records", eNBCounter);
+                      }
+                  }
 
         } catch (SQLException e) {
-            System.out.println("Connection or SQL execution Failed!");
-            e.printStackTrace();
+            MainMTU.logger.error("Connection establishing or SQL command execution is failed! Error message: {}", e.getMessage());
         }
     }
 }

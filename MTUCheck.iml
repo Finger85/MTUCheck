@@ -10,5 +10,8 @@
     <orderEntry type="library" name="ojdbc7" level="project" />
     <orderEntry type="library" name="jsch-0.1.55" level="project" />
     <orderEntry type="library" name="mysql-connector-java-8.0" level="project" />
+    <orderEntry type="library" name="logback-classic-1.2.3" level="project" />
+    <orderEntry type="library" name="logback-core-1.2.3" level="project" />
+    <orderEntry type="library" name="slf4j-api-1.7.25" level="project" />
   </component>
 </module>

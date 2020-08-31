@@ -26,9 +26,9 @@ public class SSHConnection {
             config.put("StrictHostKeyChecking", "no");
             session.setConfig(config);
             session.setPassword(password);
-            System.out.println("Connecting SSH to " + ip + " - Please wait for few seconds... ");
+            MainMTU.logger.info("Connecting SSH to ip={}. Please wait a second... ", ip);
             session.connect();
-            System.out.println("Connected!");
+            MainMTU.logger.info("DONE! SSH connection to ip={} established", ip);
         }catch(JSchException e){
             throw new JSchException ("An error occurred while connecting to "+ ip + ": " + e.getMessage());
         }
@@ -40,7 +40,7 @@ public class SSHConnection {
             try{
                 channel = (ChannelShell)session.openChannel("shell");
                 channel.connect();
-                System.out.println("You can execute your commands on " + ip);
+                MainMTU.logger.info("Commands can be executed on the host (ip={}).", ip);
             }catch(JSchException e){
                 throw new JSchException ("Error while opening channel: " + e.getMessage());
             }
@@ -52,7 +52,7 @@ public class SSHConnection {
         try {
             channel.disconnect();
             session.disconnect();
-            System.out.println("Disconnected channel and session to " + ip);
+            MainMTU.logger.info("SSH channel and session disconnected (ip={}).", ip);
         } catch (Exception e) { /*Do nothing*/ }
     }
 }
