@@ -8,17 +8,32 @@ import java.util.regex.Pattern;
 
 import com.jcraft.jsch.*;
 
-
+/**
+ * Класс, где осуществялется выполенение команд по SSH на удаленном хосте. На основе полученного вывода делается вывод состоянии, в котором нахоится проверяемая eNB ({@link EnodebStatus}).
+ */
 public class eNBChecker {
+    /**SSH channel к MME*/
     private Channel channel;
+    /**OutputStream для channel*/
     private PrintStream out;
+    /**InputStream для channel*/
     private InputStream in;
+    /**Команда обычного ping*/
     private static final String PING = "ping %s src %s count 2";
+    /**Команда ping большими пакетами*/
     private static final String PING_1472 = "ping %s src %s size 1472 count 2 df-bit on";
+    /**Команда для переходи в нужный контекст ММЕ*/
     private static final String S1MMES11 = "context s1mmes11";
+    /**Паттерн ожидаемого ответа*/
     private static final Pattern pattern = Pattern.compile("icmp_seq=\\d+ ttl=\\d+ time=\\d+.\\d+ ms");
+    /**Флаг проверки обычным ping или большими пакетами без фрагментации. True - если идет проверка обычным ping, False - если идет проверка большими пакетами.*/
     private Boolean isFirstStage;
 
+    /**
+     * Конструктор принимает Channel и получает на его основе Input и OutputStream для выполнения команд и получения результат их выполнения.
+     * @param ch Принимает в конструкторе Channel.
+     * @throws IOException Конструктор бросает IOException
+     */
     public eNBChecker(Channel ch) throws IOException {
         this.channel = ch;
         try {
@@ -29,6 +44,12 @@ public class eNBChecker {
         }
     }
 
+    /**
+     * Основной метод, где осуществляется проверка переданного eNB на доступность больших пакетов в 1472 байта без возможности фрагментации. Выполнение команд, чтение результата, возврат статуса eNB после проверки.
+     * @param enb Принимает на вход эксземпляр класса eNB ({@link eNB}) для анализа.
+     * @return Возвращает статус ({@link EnodebStatus}) eNB после проверки.
+     * @throws IOException Метод может бросить IOException.
+     */
     public EnodebStatus check(eNB enb) throws IOException {
         String outputFromConsole;
         sendCommand(S1MMES11);
@@ -45,11 +66,20 @@ public class eNBChecker {
         return stageStatus;
     }
 
+    /**
+     * Метод выводит команды в SSH консоль MME.
+     * @param command Передается строка команды.
+     */
     private void sendCommand(String command) {
         out.println(command);
         out.flush();
     }
 
+    /**
+     * Метод читает полученный на консоль вывод после выполнения команды.
+     * @return Возвращает строку, которая была выведена на консоль ММЕ после выполнения команды.
+     * @throws IOException Метод может бросить IOException.
+     */
     private String readOutput() throws IOException {
         byte[] buffer = new byte[1024];
         StringBuilder stringBuilder = new StringBuilder();
@@ -78,6 +108,11 @@ public class eNBChecker {
         return stringBuilder.toString();
     }
 
+    /**
+     * Метод, где происходит непосредственный анализ вывода на консоль ММЕ после выполнение команды. На основе вывода, возвращается статус проверки eNB.
+     * @param outputFromConsole Передается для анализа строка, полученная на консоль ММЕ после выполнения команды.
+     * @return Возвращает EnodebStatus ({@link EnodebStatus}) после проверки.
+     */
     private EnodebStatus parseOutput(String outputFromConsole) {
         Matcher matcher = pattern.matcher(outputFromConsole);
         if (isFirstStage) {

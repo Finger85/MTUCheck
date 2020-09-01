@@ -6,13 +6,16 @@ import com.jcraft.jsch.JSchException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-
 import java.io.IOException;
 import java.sql.*;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * Точка входа в программу, которая анализирует все eNB на сети на предмет их доступности для прохождения пакета размером 1472 байта без возможности его фрагментации.
+ */
 public class MainMTU {
+    /**SQL-запрос получает все записи в таблице enb по конкретному значению id макрорегиона*/
     private final static String GET_ENB_BY_MR =
             "SELECT " +
                     "id, " +
@@ -23,7 +26,7 @@ public class MainMTU {
                     "last_check " +
                     "FROM enb " +
                     "WHERE mr_id = ?";
-
+    /**SQL-запрос получает по одному IP адресу ММЕ на регион*/
     private final static String GET_MMES_IP = "SELECT mr_id, ip FROM mme_view";
     private final static long DAY_IN_MS = 86_400_000;
     private final static long HOUR_IN_MS = 3_600_000;
@@ -89,14 +92,14 @@ public class MainMTU {
                         EnodebStatus enbStatusOld = EnodebStatus.valueOf(resultSet.getString("status"));
 
                         if ((enbStatusOld == EnodebStatus.GOOD && (checkingDate - enb_last_check > DAY_IN_MS * 180)) ||
-                                (enbStatusOld == EnodebStatus.DOWN && (checkingDate - enb_last_check > DAY_IN_MS * 6)) ||
+                                (enbStatusOld == EnodebStatus.DOWN && (checkingDate - enb_last_check > DAY_IN_MS * 1)) ||
                                 (enbStatusOld == EnodebStatus.BAD && (checkingDate - enb_last_check > DAY_IN_MS * 6)) ||
                                 (enbStatusOld == EnodebStatus.NEW)) {
                             String enb_ip = resultSet.getString("enb_ip");
                             String enb_id = resultSet.getString("enb_id");
                             int enb_mr_id = resultSet.getInt("mr_id");
                             String mme_ip = mmeIpMap.get(enb_mr_id);
-                            logger.debug("eNB (ip address={}) is previous status ={} is checking...", enb_ip, enbStatusOld.toString());
+                            logger.debug("eNB (ip address={}) with last status ={} is checking...", enb_ip, enbStatusOld.toString());
                             EnodebStatus enbStatusNew = eNBChecker.check(new eNB(enb_id, enb_ip, mme_ip, enb_last_check, enbStatusOld));
 
                             try {
