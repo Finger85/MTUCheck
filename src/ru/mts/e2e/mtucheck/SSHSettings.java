@@ -39,7 +39,7 @@ public class SSHSettings {
                 values.put("password", password);
                 sshSetting.put(mr_id, values);
             }
-            MainMTU.logger.trace("SSH credentials map is created. Values: {}", sshSetting);
+            MainMTU.logger.debug("SSH credentials map is created. Values: {}", sshSetting);
         } catch (SQLException e) {
             MainMTU.logger.error("Failed to establish a connection to the DataBase ({}). Error message: {}.", DBType.MYSQL.toString(), e.getMessage());
           }
