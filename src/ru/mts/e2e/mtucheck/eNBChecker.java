@@ -3,10 +3,13 @@ package ru.mts.e2e.mtucheck;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
+import java.util.Formatter;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import com.jcraft.jsch.*;
+
+import javax.xml.bind.SchemaOutputResolver;
 
 /**
  * Класс, где осуществялется выполенение команд по SSH на удаленном хосте. На основе полученного вывода делается вывод состоянии, в котором нахоится проверяемая eNB ({@link EnodebStatus}).
@@ -25,7 +28,7 @@ public class eNBChecker {
     /**Команда для переходи в нужный контекст ММЕ*/
     private static final String S1MMES11 = "context s1mmes11";
     /**Паттерн ожидаемого ответа*/
-    private static final Pattern pattern = Pattern.compile("icmp_seq=\\d+ ttl=\\d+ time=\\d+.\\d+ ms");
+    private static final Pattern REPLY_PING_PATTERN = Pattern.compile("icmp_seq=\\d+ ttl=\\d+ time=\\d+.\\d+ ms");
     /**Флаг проверки обычным ping или большими пакетами без фрагментации. True - если идет проверка обычным ping, False - если идет проверка большими пакетами.*/
     private Boolean isFirstStage;
 
@@ -40,7 +43,7 @@ public class eNBChecker {
             out = new PrintStream(channel.getOutputStream());
             in = channel.getInputStream();
         } catch (IOException e) {
-            throw new IOException ("Can't get ssh chanel for " + ch + ". Error message: "+  e.getMessage());
+            throw new IOException ("Can't get out/input streams for channel " + ch + ". Error message: "+  e.getMessage());
         }
     }
 
@@ -92,7 +95,7 @@ public class eNBChecker {
                     }
                     stringBuilder.append(new String(buffer, 0, i));
                 }
-                if (stringBuilder.toString().contains("ping statistics")) {
+                if (stringBuilder.toString().contains("[s1mmes11]")) {
                     break;
                 }
                 if (channel.isClosed()) {
@@ -114,15 +117,15 @@ public class eNBChecker {
      * @return Возвращает EnodebStatus ({@link EnodebStatus}) после проверки.
      */
     private EnodebStatus parseOutput(String outputFromConsole) {
-        Matcher matcher = pattern.matcher(outputFromConsole);
+        Matcher reply = REPLY_PING_PATTERN.matcher(outputFromConsole);
         if (isFirstStage) {
-           if (matcher.find()) {
+           if (reply.find()) {
                isFirstStage = false;
                return EnodebStatus.GOOD;
            } else return EnodebStatus.DOWN;
         }
 
-        if (matcher.find()) {
+        if (reply.find()) {
             return EnodebStatus.GOOD;
         } else return EnodebStatus.BAD;
     }

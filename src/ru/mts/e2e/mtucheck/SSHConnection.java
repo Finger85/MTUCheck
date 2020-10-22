@@ -83,6 +83,6 @@ public class SSHConnection {
             channel.disconnect();
             session.disconnect();
             MainMTU.logger.info("SSH channel and session disconnected (ip={}).", ip);
-        } catch (Exception e) { /*Do nothing*/ }
+        } catch (Throwable e) { /*Do nothing*/ }
     }
 }
