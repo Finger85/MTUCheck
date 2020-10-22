@@ -94,7 +94,7 @@ public class MainMTU {
                             long enb_last_check = resultSet.getLong("last_check");
                             EnodebStatus enbStatusOld = EnodebStatus.valueOf(resultSet.getString("status"));
                             if ((enbStatusOld == EnodebStatus.GOOD && (checkingDate - enb_last_check > DAY_IN_MS * 180)) ||
-                                    (enbStatusOld == EnodebStatus.DOWN && (checkingDate - enb_last_check > DAY_IN_MS * 1)) ||
+                                    (enbStatusOld == EnodebStatus.DOWN && (checkingDate - enb_last_check > DAY_IN_MS * 2)) ||
                                     (enbStatusOld == EnodebStatus.BAD && (checkingDate - enb_last_check > DAY_IN_MS * 6)) ||
                                     (enbStatusOld == EnodebStatus.NEW)) {
                                 String enb_ip = resultSet.getString("enb_ip");
@@ -132,7 +132,7 @@ public class MainMTU {
                     } catch (IOException e) {
                         logger.error("Failed to read output from a host console (ip address={}). Error message: {}.", host_ip, e.getMessage());
                     }
-                    if (sshConnection != null) sshConnection.close();
+                    sshConnection.close();
                 }
                 finish = System.currentTimeMillis();
                 logger.info("SSH connection to the host (ip address={}) is closed. Thread TID_{} is competed within {}sec.", host_ip, mr_id, (finish-start)/1000);
