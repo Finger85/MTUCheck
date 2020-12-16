@@ -15,19 +15,19 @@ public class DBConnection {
     private static final String  DRIVER_ORACLE = "oracle.jdbc.OracleDriver";
 
     /**Строка Oracle JDBC URL*/
-    private static final String  JDBC_ORACLE = "jdbc:oracle:thin:@10.73.10.2:1521:DATASAFE";
+    private static final String  JDBC_ORACLE = "jdbc:oracle:thin:@*.*.*.*:1521:DATASAFE";
     /**Строка MySQL JDBC URL*/
     private static final String  JDBC_MYSQL = "jdbc:mysql://localhost:3306/mtucheck?serverTimezone=UTC";
 
     /**Логин MySQL*/
-    private static final String LOGIN_MYSQL = "root";
+    private static final String LOGIN_MYSQL = "****";
     /**Пароль MySQL*/
-    private static final String PASSWORD_MYSQL = "6DOSs_G1";
+    private static final String PASSWORD_MYSQL = "******";
 
     /**Логин Oracle*/
-    private static final String  LOGIN_ORACLE = "ETCYS";
+    private static final String  LOGIN_ORACLE = "****";
     /**Пароль Oracle*/
-    private static final String  PASSWORD_ORACLE = "U8$BBUUU1OV986NO7";
+    private static final String  PASSWORD_ORACLE = "******";
 
     static {
         try {
